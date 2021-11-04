@@ -132,7 +132,6 @@ export interface LoadBalancedServiceContext {
     clusterName: string;
     securityGroupId: string;
     healthCheck?: elbv2.HealthCheck;
-    secretsArn: string;
   };
   route53: {
     hostedZoneId: string;
