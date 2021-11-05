@@ -7,6 +7,8 @@ import * as rt53Targets from "@aws-cdk/aws-route53-targets";
 import * as cdk from "@aws-cdk/core";
 
 export class LoadBalancedService extends cdk.Construct {
+  cluster: ecs.ICluster;
+
   constructor(
     scope: cdk.Construct,
     id: string,
@@ -43,11 +45,15 @@ export class LoadBalancedService extends cdk.Construct {
       ecsSecurityGroupId
     );
 
-    const cluster = ecs.Cluster.fromClusterAttributes(this, "ECSCluster", {
-      vpc,
-      clusterName,
-      securityGroups: [securityGroup],
-    });
+    const cluster = (this.cluster = ecs.Cluster.fromClusterAttributes(
+      this,
+      "ECSCluster",
+      {
+        vpc,
+        clusterName,
+        securityGroups: [securityGroup],
+      }
+    ));
 
     const domainZone = rt53.HostedZone.fromHostedZoneAttributes(
       this,
@@ -57,6 +63,7 @@ export class LoadBalancedService extends cdk.Construct {
         zoneName,
       }
     );
+
     const loadBalancer =
       elbv2.ApplicationLoadBalancer.fromApplicationLoadBalancerAttributes(
         this,
