@@ -21,7 +21,7 @@ export class LoadBalancedService extends cdk.Construct {
       serviceFactory,
       domainName,
       vpc: { vpcId },
-      ecs: { clusterName, securityGroupId: ecsSecurityGroupId, healthCheck },
+      ecs: { clusterName, securityGroupId: ecsSecurityGroupId },
       route53: { hostedZoneId, zoneName },
       ec2: {
         loadBalancer: {
@@ -138,7 +138,6 @@ export interface LoadBalancedServiceContext {
   ecs: {
     clusterName: string;
     securityGroupId: string;
-    healthCheck?: elbv2.HealthCheck;
   };
   route53: {
     hostedZoneId: string;
