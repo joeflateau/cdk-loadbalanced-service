@@ -14,7 +14,7 @@ export class LoadBalancedService extends cdk.Construct {
   constructor(
     scope: cdk.Construct,
     id: string,
-    options: LoadBalancedServiceOptions
+    options: LoadBalancedServiceContext
   ) {
     super(scope, id);
 
@@ -142,6 +142,17 @@ export class LoadBalancedService extends cdk.Construct {
   }
 }
 
+export async function createLoadBalancedService(
+  scope: cdk.Construct,
+  id: string,
+  options: {
+    loadBalancerListenerArn: string;
+  } & Omit<LoadBalancedServiceContext, "ec2">
+): Promise<LoadBalancedService> {
+  const context = await getContext(options);
+  return new LoadBalancedService(scope, id, context);
+}
+
 export async function getContext(
   options: {
     loadBalancerListenerArn: string;
@@ -229,8 +240,6 @@ export interface LoadBalancedServiceContext {
   ec2: {
     loadBalancer: EcsLoadBalancerContext;
   };
-}
-export interface LoadBalancedServiceFactories {
   targetGroupFactory: (vpc: ec2.IVpc) => elbv2.ApplicationTargetGroup;
   serviceFactory: (
     cluster: ecs.ICluster,
@@ -242,6 +251,3 @@ export interface LoadBalancedServiceFactories {
     }
   ) => ecs.Ec2Service;
 }
-
-export type LoadBalancedServiceOptions = LoadBalancedServiceContext &
-  LoadBalancedServiceFactories;
