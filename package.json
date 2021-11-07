@@ -25,6 +25,10 @@
     "@aws-cdk/aws-elasticloadbalancingv2": "^1.130.0",
     "@aws-cdk/aws-route53": "^1.130.0",
     "@aws-cdk/aws-route53-targets": "^1.130.0",
-    "@aws-cdk/core": "1.130.0"
+    "@aws-cdk/core": "1.130.0",
+    "aws-sdk": "^2.1023.0"
+  },
+  "dependencies": {
+    "elb-rule-priority": "^1.0.2"
   }
 }
