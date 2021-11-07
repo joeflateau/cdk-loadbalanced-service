@@ -23,7 +23,7 @@ export class LoadBalancedService extends cdk.Construct {
       serviceFactory,
       domainName,
       vpc: { vpcId },
-      ecs: { clusterName, securityGroupId: ecsSecurityGroupId },
+      ecs: { clusterName, securityGroupIds: ecsSecurityGroupIds },
       route53: { hostedZoneId, zoneName },
       ec2: {
         loadBalancer: {
@@ -41,10 +41,12 @@ export class LoadBalancedService extends cdk.Construct {
       vpcId,
     });
 
-    const securityGroup = ec2.SecurityGroup.fromSecurityGroupId(
-      this,
-      "ECSSecurityGroup",
-      ecsSecurityGroupId
+    const securityGroups = ecsSecurityGroupIds.map((securityGroupId, i) =>
+      ec2.SecurityGroup.fromSecurityGroupId(
+        this,
+        `ECSSecurityGroup${i}`,
+        securityGroupId
+      )
     );
 
     const cluster = (this.cluster = ecs.Cluster.fromClusterAttributes(
@@ -53,7 +55,7 @@ export class LoadBalancedService extends cdk.Construct {
       {
         vpc,
         clusterName,
-        securityGroups: [securityGroup],
+        securityGroups,
       }
     ));
 
@@ -64,6 +66,12 @@ export class LoadBalancedService extends cdk.Construct {
         hostedZoneId,
         zoneName,
       }
+    );
+
+    const loadBalancerSecurityGroup = ec2.SecurityGroup.fromSecurityGroupId(
+      this,
+      id,
+      loadBalancerSecurityGroupId
     );
 
     const loadBalancer =
@@ -83,7 +91,7 @@ export class LoadBalancedService extends cdk.Construct {
         this,
         "ECSListener",
         {
-          securityGroup,
+          securityGroup: loadBalancerSecurityGroup,
           listenerArn: loadBalancerListenerArn,
         }
       );
@@ -124,7 +132,7 @@ export class LoadBalancedService extends cdk.Construct {
     });
 
     const service = serviceFactory(cluster, {
-      securityGroup,
+      securityGroups,
       vpc,
       targetGroup,
       hostedZone: domainZone,
@@ -136,14 +144,14 @@ export class LoadBalancedService extends cdk.Construct {
 
 export async function getContext(
   options: {
-    ec2: { loadBalancerListenerArn: string };
+    loadBalancerListenerArn: string;
   } & Omit<LoadBalancedServiceContext, "ec2">
 ): Promise<LoadBalancedServiceContext> {
   const context: LoadBalancedServiceContext = {
     ...options,
     ec2: {
       loadBalancer: await getLoadBalancerContext(
-        options.ec2.loadBalancerListenerArn,
+        options.loadBalancerListenerArn,
         options.domainName
       ),
     },
@@ -152,7 +160,7 @@ export async function getContext(
   return context;
 }
 
-export async function getLoadBalancerContext(
+async function getLoadBalancerContext(
   listenerArn: string,
   hostname: string
 ): Promise<EcsLoadBalancerContext> {
@@ -205,13 +213,15 @@ export type EcsLoadBalancerContext = {
   loadBalancerListenerArn: string;
 };
 
+export type EcsClusterContext = {
+  clusterName: string;
+  securityGroupIds: string[];
+};
+
 export interface LoadBalancedServiceContext {
   domainName: string;
   vpc: { vpcId: string };
-  ecs: {
-    clusterName: string;
-    securityGroupId: string;
-  };
+  ecs: EcsClusterContext;
   route53: {
     hostedZoneId: string;
     zoneName: string;
@@ -225,7 +235,7 @@ export interface LoadBalancedServiceFactories {
   serviceFactory: (
     cluster: ecs.ICluster,
     extras: {
-      securityGroup: ec2.ISecurityGroup;
+      securityGroups: ec2.ISecurityGroup[];
       vpc: ec2.IVpc;
       targetGroup: elbv2.ApplicationTargetGroup;
       hostedZone: rt53.IHostedZone;
