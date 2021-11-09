@@ -5,7 +5,7 @@ import * as elbv2 from "@aws-cdk/aws-elasticloadbalancingv2";
 import * as rt53 from "@aws-cdk/aws-route53";
 import * as rt53Targets from "@aws-cdk/aws-route53-targets";
 import * as cdk from "@aws-cdk/core";
-import { ELBv2 } from "aws-sdk";
+import { ELBv2, Route53 } from "aws-sdk";
 import { findPriorityOrFail } from "elb-rule-priority";
 
 export class LoadBalancedService extends cdk.Construct {
@@ -145,10 +145,12 @@ export class LoadBalancedService extends cdk.Construct {
 export async function getContext(
   options: {
     loadBalancerListenerArn: string;
-  } & Omit<LoadBalancedServiceContext, "ec2">
+    route53ZoneId: string;
+  } & Omit<LoadBalancedServiceContext, "ec2" | "route53">
 ): Promise<LoadBalancedServiceContext> {
   const context: LoadBalancedServiceContext = {
     ...options,
+    route53: await getRoute53Zone(options.route53ZoneId),
     ec2: {
       loadBalancer: await getLoadBalancerContext(
         options.loadBalancerListenerArn,
@@ -160,6 +162,21 @@ export async function getContext(
   return context;
 }
 
+async function getRoute53Zone(zoneId: string): Promise<Route53ZoneContext> {
+  const route53 = new Route53();
+  const result = (
+    await route53
+      .getHostedZone({
+        Id: zoneId,
+      })
+      .promise()
+  ).HostedZone;
+
+  return {
+    hostedZoneId: result.Id,
+    zoneName: result.Name,
+  };
+}
 async function getLoadBalancerContext(
   listenerArn: string,
   hostname: string
@@ -218,14 +235,16 @@ export type EcsClusterContext = {
   securityGroupIds: string[];
 };
 
+export type Route53ZoneContext = {
+  hostedZoneId: string;
+  zoneName: string;
+};
+
 export interface LoadBalancedServiceContext {
   domainName: string;
   vpc: { vpcId: string };
   ecs: EcsClusterContext;
-  route53: {
-    hostedZoneId: string;
-    zoneName: string;
-  };
+  route53: Route53ZoneContext;
   ec2: {
     loadBalancer: EcsLoadBalancerContext;
   };
