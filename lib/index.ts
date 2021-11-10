@@ -122,7 +122,6 @@ export async function getContext(
   options: {
     loadBalancer: {
       listenerArn: string;
-      securityGroupId: string;
     };
     route53ZoneId: string;
   } & Omit<LoadBalancedServiceContext, "ec2">
