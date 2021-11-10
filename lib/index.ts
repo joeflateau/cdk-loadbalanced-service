@@ -116,7 +116,7 @@ export class LoadBalancedService extends cdk.Construct {
   }
 }
 
-export async function getContext(
+export async function getLoadBalancedServiceContext(
   options: {
     loadBalancerArn: string;
   } & Omit<LoadBalancedServiceContext, "loadBalancer">
