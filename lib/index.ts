@@ -123,7 +123,6 @@ export async function getContext(
     loadBalancer: {
       listenerArn: string;
     };
-    route53ZoneId: string;
   } & Omit<LoadBalancedServiceContext, "ec2">
 ): Promise<LoadBalancedServiceContext> {
   const context: LoadBalancedServiceContext = {
