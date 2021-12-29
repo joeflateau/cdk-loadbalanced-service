@@ -1,11 +1,13 @@
-import * as acm from "@aws-cdk/aws-certificatemanager";
-import * as ec2 from "@aws-cdk/aws-ec2";
-import * as ecs from "@aws-cdk/aws-ecs";
-import * as elbv2 from "@aws-cdk/aws-elasticloadbalancingv2";
-import * as rt53 from "@aws-cdk/aws-route53";
-import * as rt53Targets from "@aws-cdk/aws-route53-targets";
-import * as cdk from "@aws-cdk/core";
+import {
+  aws_certificatemanager as acm,
+  aws_ec2 as ec2,
+  aws_ecs as ecs,
+  aws_elasticloadbalancingv2 as elbv2,
+  aws_route53 as rt53,
+  aws_route53_targets as rt53Targets,
+} from "aws-cdk-lib";
 import { ELBv2 } from "aws-sdk";
+import * as cdk from "constructs";
 import { findPriorityOrFail } from "elb-rule-priority";
 
 export class LoadBalancedService extends cdk.Construct {
@@ -33,7 +35,7 @@ export class LoadBalancedService extends cdk.Construct {
     } = options;
 
     const securityGroups = ecsSecurityGroupIds.map((securityGroupId, i) =>
-      ec2.SecurityGroup.fromLookup(
+      ec2.SecurityGroup.fromLookupById(
         this,
         `ECSSecurityGroup${i}`,
         securityGroupId

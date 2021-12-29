@@ -1,6 +1,6 @@
 {
   "name": "cdk-loadbalanced-ecs-service",
-  "version": "0.0.14",
+  "version": "0.2.0",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
@@ -19,13 +19,8 @@
     "typescript": "~3.9.7"
   },
   "peerDependencies": {
-    "@aws-cdk/aws-certificatemanager": "^1.130.0",
-    "@aws-cdk/aws-ec2": "^1.130.0",
-    "@aws-cdk/aws-ecs": "^1.130.0",
-    "@aws-cdk/aws-elasticloadbalancingv2": "^1.130.0",
-    "@aws-cdk/aws-route53": "^1.130.0",
-    "@aws-cdk/aws-route53-targets": "^1.130.0",
-    "@aws-cdk/core": "1.130.0",
+    "aws-cdk-lib": "^2.0.0",
+    "constructs": "^10.0.0",
     "aws-sdk": "^2.1023.0"
   },
   "dependencies": {
