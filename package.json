@@ -20,10 +20,10 @@
   },
   "peerDependencies": {
     "aws-cdk-lib": "^2.0.0",
-    "constructs": "^10.0.0",
-    "aws-sdk": "^2.1023.0"
+    "aws-sdk": "^2.1023.0",
+    "constructs": "^10.0.0"
   },
   "dependencies": {
-    "elb-rule-priority": "^1.0.2"
+    "elb-rule-priority": "^1.0.3"
   }
 }
