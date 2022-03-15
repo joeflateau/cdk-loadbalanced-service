@@ -5,6 +5,7 @@ import {
   aws_elasticloadbalancingv2 as elbv2,
   aws_route53 as rt53,
   aws_route53_targets as rt53Targets,
+  Duration as cdk_duration,
 } from "aws-cdk-lib";
 import { ELBv2 } from "aws-sdk";
 import * as cdk from "constructs";
@@ -21,7 +22,7 @@ export class LoadBalancedService extends cdk.Construct {
     super(scope, id);
 
     const {
-      targetGroupFactory,
+      targetGroupProps,
       serviceFactory,
       domainName,
       clusterName,
@@ -72,7 +73,13 @@ export class LoadBalancedService extends cdk.Construct {
       }
     ));
 
-    const targetGroup = targetGroupFactory(vpc);
+    const targetGroup = new elbv2.ApplicationTargetGroup(this, "TargetGroup", {
+      vpc,
+      protocol: elbv2.ApplicationProtocol.HTTP,
+      deregistrationDelay: cdk_duration.seconds(15),
+      stickinessCookieDuration: cdk_duration.days(1),
+      ...targetGroupProps,
+    });
 
     const cert = new acm.DnsValidatedCertificate(this, "ACMCert", {
       domainName,
@@ -180,8 +187,11 @@ export interface LoadBalancedServiceContext {
   route53ZoneName?: string;
   loadBalancer: EcsLoadBalancerContext;
 }
+export interface LoadBalancedServiceDefaults {
+  targetGroupProps: Partial<elbv2.ApplicationTargetGroupProps>;
+}
+
 export interface LoadBalancedServiceFactories {
-  targetGroupFactory: (vpc: ec2.IVpc) => elbv2.ApplicationTargetGroup;
   serviceFactory: (
     cluster: ecs.ICluster,
     extras: {
@@ -194,4 +204,5 @@ export interface LoadBalancedServiceFactories {
 }
 
 export type LoadBalancedServiceOptions = LoadBalancedServiceContext &
+  LoadBalancedServiceDefaults &
   LoadBalancedServiceFactories;
