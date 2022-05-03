@@ -14,6 +14,7 @@ import { findPriorityOrFail } from "elb-rule-priority";
 export class LoadBalancedService extends cdk.Construct {
   cluster: ecs.ICluster;
   loadBalancer: elbv2.IApplicationLoadBalancer;
+  hostedZone: rt53.IHostedZone;
 
   constructor(
     scope: cdk.Construct,
@@ -45,9 +46,14 @@ export class LoadBalancedService extends cdk.Construct {
       )
     );
 
-    const domainZone = rt53.HostedZone.fromLookup(this, "ECSZone", {
-      domainName: route53ZoneName ?? domainName.split(".").slice(-2).join("."),
-    });
+    const domainZone = (this.hostedZone = rt53.HostedZone.fromLookup(
+      this,
+      "ECSZone",
+      {
+        domainName:
+          route53ZoneName ?? domainName.split(".").slice(-2).join("."),
+      }
+    ));
 
     const loadBalancer = (this.loadBalancer =
       elbv2.ApplicationLoadBalancer.fromLookup(this, "ECSLoadBalancer", {
