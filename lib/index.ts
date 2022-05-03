@@ -12,6 +12,7 @@ import * as cdk from "constructs";
 import { findPriorityOrFail } from "elb-rule-priority";
 
 export class LoadBalancedService extends cdk.Construct {
+  certificate: acm.DnsValidatedCertificate;
   cluster: ecs.ICluster;
   loadBalancer: elbv2.IApplicationLoadBalancer;
   hostedZone: rt53.IHostedZone;
@@ -86,10 +87,14 @@ export class LoadBalancedService extends cdk.Construct {
       ...targetGroupProps,
     });
 
-    const cert = new acm.DnsValidatedCertificate(this, "ACMCert", {
-      domainName,
-      hostedZone: domainZone,
-    });
+    const cert = (this.certificate = new acm.DnsValidatedCertificate(
+      this,
+      "ACMCert",
+      {
+        domainName,
+        hostedZone: domainZone,
+      }
+    ));
 
     const listenerRule = new elbv2.ApplicationListenerRule(
       this,
