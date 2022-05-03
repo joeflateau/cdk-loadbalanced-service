@@ -13,6 +13,7 @@ import { findPriorityOrFail } from "elb-rule-priority";
 
 export class LoadBalancedService extends cdk.Construct {
   cluster: ecs.ICluster;
+  loadBalancer: elbv2.IApplicationLoadBalancer;
 
   constructor(
     scope: cdk.Construct,
@@ -22,7 +23,8 @@ export class LoadBalancedService extends cdk.Construct {
     super(scope, id);
 
     const {
-      targetGroupProps,
+      targetGroupProps = {},
+      createRoute53ARecord = true,
       serviceFactory,
       domainName,
       clusterName,
@@ -47,13 +49,10 @@ export class LoadBalancedService extends cdk.Construct {
       domainName: route53ZoneName ?? domainName.split(".").slice(-2).join("."),
     });
 
-    const loadBalancer = elbv2.ApplicationLoadBalancer.fromLookup(
-      this,
-      "ECSLoadBalancer",
-      {
+    const loadBalancer = (this.loadBalancer =
+      elbv2.ApplicationLoadBalancer.fromLookup(this, "ECSLoadBalancer", {
         loadBalancerArn,
-      }
-    );
+      }));
 
     const listener = elbv2.ApplicationListener.fromLookup(this, "ECSListener", {
       listenerArn: loadBalancerListenerArn,
@@ -106,13 +105,15 @@ export class LoadBalancedService extends cdk.Construct {
       }
     );
 
-    const recordSet = new rt53.ARecord(this, "ALBAlias", {
-      recordName: domainName,
-      zone: domainZone,
-      target: rt53.RecordTarget.fromAlias(
-        new rt53Targets.LoadBalancerTarget(loadBalancer)
-      ),
-    });
+    if (createRoute53ARecord) {
+      const recordSet = new rt53.ARecord(this, "ALBAlias", {
+        recordName: domainName,
+        zone: domainZone,
+        target: rt53.RecordTarget.fromAlias(
+          new rt53Targets.LoadBalancerTarget(loadBalancer)
+        ),
+      });
+    }
 
     const service = serviceFactory(cluster, {
       securityGroups,
@@ -188,7 +189,8 @@ export interface LoadBalancedServiceContext {
   loadBalancer: EcsLoadBalancerContext;
 }
 export interface LoadBalancedServiceDefaults {
-  targetGroupProps: Partial<elbv2.ApplicationTargetGroupProps>;
+  createRoute53ARecord?: boolean;
+  targetGroupProps?: Partial<elbv2.ApplicationTargetGroupProps>;
 }
 
 export interface LoadBalancedServiceFactories {
