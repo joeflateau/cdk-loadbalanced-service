@@ -16,6 +16,7 @@ export class LoadBalancedService extends cdk.Construct {
   cluster: ecs.ICluster;
   loadBalancer: elbv2.IApplicationLoadBalancer;
   hostedZone: rt53.IHostedZone;
+  securityGroup: ec2.ISecurityGroup;
 
   constructor(
     scope: cdk.Construct,
@@ -39,11 +40,12 @@ export class LoadBalancedService extends cdk.Construct {
       },
     } = options;
 
-    const securityGroup = ec2.SecurityGroup.fromLookupById(
-      this,
-      `ECSSecurityGroup`,
-      ecsSecurityGroupId
-    );
+    const securityGroup = (this.securityGroup =
+      ec2.SecurityGroup.fromLookupById(
+        this,
+        `ECSSecurityGroup`,
+        ecsSecurityGroupId
+      ));
 
     const domainZone = (this.hostedZone = rt53.HostedZone.fromLookup(
       this,
