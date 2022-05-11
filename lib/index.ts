@@ -30,7 +30,7 @@ export class LoadBalancedService extends cdk.Construct {
       serviceFactory,
       domainName,
       clusterName,
-      containerSecurityGroupIds: ecsSecurityGroupIds,
+      containerSecurityGroupId: ecsSecurityGroupId,
       route53ZoneName,
       loadBalancer: {
         rulePriority,
@@ -39,12 +39,10 @@ export class LoadBalancedService extends cdk.Construct {
       },
     } = options;
 
-    const securityGroups = ecsSecurityGroupIds.map((securityGroupId, i) =>
-      ec2.SecurityGroup.fromLookupById(
-        this,
-        `ECSSecurityGroup${i}`,
-        securityGroupId
-      )
+    const securityGroup = ec2.SecurityGroup.fromLookupById(
+      this,
+      `ECSSecurityGroup`,
+      ecsSecurityGroupId
     );
 
     const domainZone = (this.hostedZone = rt53.HostedZone.fromLookup(
@@ -75,7 +73,7 @@ export class LoadBalancedService extends cdk.Construct {
       {
         vpc,
         clusterName,
-        securityGroups,
+        securityGroups: [securityGroup],
       }
     ));
 
@@ -127,7 +125,7 @@ export class LoadBalancedService extends cdk.Construct {
     }
 
     const service = serviceFactory(cluster, {
-      securityGroups,
+      securityGroup,
       vpc,
       targetGroup,
       hostedZone: domainZone,
@@ -195,7 +193,7 @@ export interface LoadBalancedServiceContext {
   domainName: string;
   vpcId: string;
   clusterName: string;
-  containerSecurityGroupIds: string[];
+  containerSecurityGroupId: string;
   route53ZoneName?: string;
   loadBalancer: EcsLoadBalancerContext;
 }
@@ -208,7 +206,7 @@ export interface LoadBalancedServiceFactories {
   serviceFactory: (
     cluster: ecs.ICluster,
     extras: {
-      securityGroups: ec2.ISecurityGroup[];
+      securityGroup: ec2.ISecurityGroup;
       vpc: ec2.IVpc;
       targetGroup: elbv2.ApplicationTargetGroup;
       hostedZone: rt53.IHostedZone;
