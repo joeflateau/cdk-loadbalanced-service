@@ -45,34 +45,17 @@ class MyStack extends Construct {
         const taskDefinition = new ecs.Ec2TaskDefinition(
           this,
           "TaskDefinition",
-          {
-            taskRole,
-            executionRole,
-          }
+          {}
         );
 
-        const container = taskDefinition.addContainer("Api", {
-          image: ecs.ContainerImage.fromDockerImageAsset(
-            new ecrassets.DockerImageAsset(this, "ImageAsset", {
-              directory: joinPath(__dirname, "../../../.."),
-              file: "./apps/my-app/Dockerfile",
-            })
-          ),
-          memoryLimitMiB: 1024,
-          essential: true,
-          command: ["serve"],
-        });
-
-        container.addPortMappings({
-          containerPort: "8080",
-        });
+        // call taskDefinition.addContainer here...
 
         const ecsService = new ecs.Ec2Service(this, "EC2Service", {
           cluster,
           taskDefinition,
         });
 
-        return apiEcsService;
+        return ecsService;
       },
     });
   }
